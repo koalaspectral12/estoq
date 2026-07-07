@@ -1,5 +1,5 @@
-const CACHE_NAME = 'carrinhocerto-v1';
-const APP_SHELL = ['/', '/manifest.webmanifest', '/icon.svg'];
+const CACHE_NAME = 'carrinhocerto-next-v1';
+const APP_SHELL = ['/', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -14,17 +14,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  if (request.method !== 'GET') return;
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, cloned));
-          return response;
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
+
+      return fetch(event.request)
+        .then((networkResponse) => {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          return networkResponse;
         })
         .catch(() => caches.match('/'));
     })
